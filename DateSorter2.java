@@ -50,11 +50,22 @@ public class DateSorter {
         
         Predicate<LocalDate> containsR = localDate -> localDate.getMonth().name().toLowerCase().contains("r");
 
-        return Stream.of(
-                        unsortedDates.stream().filter(containsR).sorted(Comparator.naturalOrder()),
-                        unsortedDates.stream().filter(containsR.negate()).sorted(Comparator.reverseOrder())
-                )
-                .flatMap(stream->stream)
+        Map<Boolean, List<LocalDate>> partitionedByContainingRMap = unsortedDates
+                .stream()
+                .collect(Collectors.partitioningBy(containsR));
+
+        List<LocalDate> containingRList = partitionedByContainingRMap.get(true)
+                .stream()
+                .sorted(Comparator.naturalOrder())
+                .toList();
+
+        List<LocalDate> notContainingRList = partitionedByContainingRMap.get(false)
+                .stream()
+                .sorted(Comparator.reverseOrder())
+                .toList();
+
+        return Stream.of(containingRList, notContainingRList)
+                .flatMap(Collection::stream)
                 .toList();
     }
 }
